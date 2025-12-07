@@ -1,0 +1,1 @@
+["flows", "uniq_src_ip", "uniq_dst_ip", "uniq_dst_port", "entropy_dst_port", "avg_in_bytes", "avg_out_bytes", "avg_duration_ms", "small_flow_ratio", "avg_src_to_dst_bps", "avg_dst_to_src_bps", "src_iat_avg", "src_iat_std", "dst_iat_avg", "dst_iat_std"]

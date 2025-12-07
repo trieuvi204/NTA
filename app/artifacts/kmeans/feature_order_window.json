@@ -1,0 +1,8 @@
+[
+  "flows",
+  "uniq_dst_ports",
+  "syn_count",
+  "small_pkt_ratio",
+  "entropy_dst_port",
+  "avg_flow_iat_mean"
+]

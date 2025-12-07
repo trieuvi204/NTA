@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NTA Sentinel | Unified Dashboard</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-app: #0f172a;
+      --bg-panel: #1e293b;
+      --border-color: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --accent-primary: #3b82f6;
+      --color-success: #10b981;
+      --color-danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    aside {
+      width: 240px;
+      background: var(--bg-app);
+      border-right: 1px solid var(--border-color);
+      padding: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 700;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .brand i {
+      color: var(--accent-primary);
+      font-size: 22px;
+    }
+
+    .menu-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .menu-item:hover,
+    .menu-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-primary);
+    }
+
+    /* Main content */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .ws-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-danger);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+    }
+
+    .ws-status.connected .dot {
+      background: var(--color-success);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Stats area (fixed) */
+    .stats-area {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card {
+      background: var(--bg-panel);
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .card-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .card-value {
+      font-size: 22px;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+    }
+
+    .panel-container {
+      flex: 1;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    /* ONLY log content scrolls */
+    .log-panel {
+      height: 100%;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-panel);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--bg-app);
+      position: sticky;
+      top: 0;
+      padding: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 5;
+      text-align: left;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-attack {
+      color: var(--color-danger);
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .badge-benign {
+      color: var(--color-success);
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="brand">
+      <i class="ri-shield-check-fill"></i>
+      NTA Dashboard
+    </div>
+
+    <div id="tab-kmeans" class="menu-item active">
+      <i class="ri-line-chart-fill"></i>
+      KMeans Monitor
+    </div>
+
+    <div id="tab-dbscan" class="menu-item">
+      <i class="ri-radar-fill"></i>
+      DBSCAN Monitor
+    </div>
+  </aside>
+
+  <main>
+    <!-- Header -->
+    <header>
+      <h2 id="page-title">KMeans Window Monitor</h2>
+      <div id="ws-status" class="ws-status">
+        <div class="dot"></div>
+        <span id="ws-text">CONNECTING...</span>
+      </div>
+    </header>
+
+    <!-- STATS (per-model, show/hide) -->
+    <div id="stats-kmeans" class="stats-area">
+      <div class="card">
+        <div class="card-label">Detected Attacks</div>
+        <div class="card-value" id="km-a">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Normal Windows</div>
+        <div class="card-value" id="km-b">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Avg Distance (Last 10)</div>
+        <div class="card-value" id="km-avg">0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Threshold</div>
+        <div class="card-value" id="km-th">0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Unique Src IPs</div>
+        <div class="card-value" id="km-src">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Unique Dst IPs</div>
+        <div class="card-value" id="km-dst">0</div>
+      </div>
+    </div>
+
+    <div id="stats-dbscan" class="stats-area hidden">
+      <div class="card">
+        <div class="card-label">Detected Attacks</div>
+        <div class="card-value" id="db-a">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Normal Windows</div>
+        <div class="card-value" id="db-b">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Avg Distance (Last 10)</div>
+        <div class="card-value" id="db-avg">0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-label">EPS</div>
+        <div class="card-value" id="db-eps">0.00</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Unique Src IPs</div>
+        <div class="card-value" id="db-src">0</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Unique Dst IPs</div>
+        <div class="card-value" id="db-dst">0</div>
+      </div>
+    </div>
+
+    <!-- Log panel (only log scrolls) -->
+    <div class="panel-container">
+      <div class="log-panel">
+
+        <!-- KMeans table -->
+        <div id="table-kmeans">
+          <table>
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Timestamp</th>
+                <th>Distance</th>
+                <th>Flows</th>
+                <th>Src IPs</th>
+                <th>Dst IPs</th>
+              </tr>
+            </thead>
+            <tbody id="km-log"></tbody>
+          </table>
+        </div>
+
+        <!-- DBSCAN table -->
+        <div id="table-dbscan" class="hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Timestamp</th>
+                <th>Distance</th>
+                <th>Flows</th>
+                <th>Src IPs</th>
+                <th>Dst IPs</th>
+              </tr>
+            </thead>
+            <tbody id="db-log"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /********************************
+     * TAB SWITCHING (KHÔNG MẤT LOG)
+     ********************************/
+    const tabK = document.getElementById("tab-kmeans");
+    const tabD = document.getElementById("tab-dbscan");
+    const pageTitle = document.getElementById("page-title");
+
+    const statsK = document.getElementById("stats-kmeans");
+    const statsD = document.getElementById("stats-dbscan");
+    const tableK = document.getElementById("table-kmeans");
+    const tableD = document.getElementById("table-dbscan");
+
+    tabK.onclick = () => {
+      tabK.classList.add("active");
+      tabD.classList.remove("active");
+      statsK.classList.remove("hidden");
+      statsD.classList.add("hidden");
+      tableK.classList.remove("hidden");
+      tableD.classList.add("hidden");
+      pageTitle.textContent = "KMeans Window Monitor";
+    };
+
+    tabD.onclick = () => {
+      tabD.classList.add("active");
+      tabK.classList.remove("active");
+      statsD.classList.remove("hidden");
+      statsK.classList.add("hidden");
+      tableD.classList.remove("hidden");
+      tableK.classList.add("hidden");
+      pageTitle.textContent = "DBSCAN Window Monitor";
+    };
+
+    /*******************************************
+     * WEBSOCKET STATUS (LIVE nếu 1 trong 2 OK)
+     *******************************************/
+    const wsStatus = document.getElementById("ws-status");
+    const wsText = document.getElementById("ws-text");
+
+    let wsKOpen = false;
+    let wsDOpen = false;
+
+    function updateWSStatus() {
+      const ok = wsKOpen || wsDOpen;
+      if (ok) {
+        wsStatus.classList.add("connected");
+        wsText.textContent = "LIVE";
+      } else {
+        wsStatus.classList.remove("connected");
+        wsText.textContent = "DISCONNECTED";
+      }
+    }
+
+    /*******************************************
+     * KMEANS SOCKET + STATE
+     *******************************************/
+    let kmA = 0, kmB = 0;
+    let kmDist = [];
+    let kmSrcSet = new Set();
+    let kmDstSet = new Set();
+
+    const elKmA = document.getElementById("km-a");
+    const elKmB = document.getElementById("km-b");
+    const elKmAvg = document.getElementById("km-avg");
+    const elKmTh = document.getElementById("km-th");
+    const elKmSrc = document.getElementById("km-src");
+    const elKmDst = document.getElementById("km-dst");
+    const kmLogBody = document.getElementById("km-log");
+
+    const wsK = new WebSocket("ws://localhost:8000/ws");
+
+    wsK.onopen = () => {
+      wsKOpen = true;
+      updateWSStatus();
+    };
+
+    wsK.onclose = () => {
+      wsKOpen = false;
+      updateWSStatus();
+    };
+
+    wsK.onmessage = (evt) => {
+      const d = JSON.parse(evt.data);
+      // KMeans: dùng distance > threshold
+      const isAttack = d.distance > d.threshold;
+
+      if (isAttack) kmA++; else kmB++;
+
+      kmDist.push(d.distance);
+      if (kmDist.length > 10) kmDist.shift();
+
+      (d.src_ips || []).forEach(ip => kmSrcSet.add(ip));
+      (d.dst_ips || []).forEach(ip => kmDstSet.add(ip));
+
+      elKmA.textContent = kmA;
+      elKmB.textContent = kmB;
+      elKmTh.textContent = d.threshold.toFixed(4);
+      elKmAvg.textContent = (kmDist.reduce((a, b) => a + b, 0) / kmDist.length).toFixed(4);
+      elKmSrc.textContent = kmSrcSet.size;
+      elKmDst.textContent = kmDstSet.size;
+
+      const badge = isAttack
+        ? `<span class="badge badge-attack">ATTACK</span>`
+        : `<span class="badge badge-benign">BENIGN</span>`;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${badge}</td>
+        <td>${d.window_ts.replace("T", " ").split(".")[0]}</td>
+        <td>${d.distance.toFixed(4)}</td>
+        <td>${d.flows_in_window}</td>
+        <td>${(d.src_ips || []).join(", ")}</td>
+        <td>${(d.dst_ips || []).join(", ")}</td>
+      `;
+
+      kmLogBody.prepend(row);
+      if (kmLogBody.children.length > 200) {
+        kmLogBody.lastElementChild.remove();
+      }
+    };
+
+    /*******************************************
+     * DBSCAN SOCKET + STATE
+     *******************************************/
+    let dbA = 0, dbB = 0;
+    let dbDist = [];
+    let dbSrcSet = new Set();
+    let dbDstSet = new Set();
+
+    const elDbA = document.getElementById("db-a");
+    const elDbB = document.getElementById("db-b");
+    const elDbAvg = document.getElementById("db-avg");
+    const elDbEps = document.getElementById("db-eps");
+    const elDbSrc = document.getElementById("db-src");
+    const elDbDst = document.getElementById("db-dst");
+    const dbLogBody = document.getElementById("db-log");
+
+    const wsD = new WebSocket("ws://localhost:8000/ws_dbscan");
+
+    wsD.onopen = () => {
+      wsDOpen = true;
+      updateWSStatus();
+    };
+
+    wsD.onclose = () => {
+      wsDOpen = false;
+      updateWSStatus();
+    };
+
+    wsD.onmessage = (evt) => {
+      const d = JSON.parse(evt.data);
+      // DBSCAN: BE đã trả label Attack/Benign
+      const isAttack = d.label === "Attack";
+
+      if (isAttack) dbA++; else dbB++;
+
+      dbDist.push(d.distance);
+      if (dbDist.length > 10) dbDist.shift();
+
+      (d.src_ips || []).forEach(ip => dbSrcSet.add(ip));
+      (d.dst_ips || []).forEach(ip => dbDstSet.add(ip));
+
+      elDbA.textContent = dbA;
+      elDbB.textContent = dbB;
+      // EPS nếu BE có gửi threshold, nếu không thì 0.00
+      const eps = (d.threshold !== undefined && d.threshold !== null) ? d.threshold : 0;
+      elDbEps.textContent = Number(eps).toFixed(2);
+      elDbAvg.textContent = (dbDist.reduce((a, b) => a + b, 0) / dbDist.length).toFixed(4);
+      elDbSrc.textContent = dbSrcSet.size;
+      elDbDst.textContent = dbDstSet.size;
+
+      const badge = isAttack
+        ? `<span class="badge badge-attack">ATTACK</span>`
+        : `<span class="badge badge-benign">BENIGN</span>`;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${badge}</td>
+        <td>${d.window_ts.replace("T", " ").split(".")[0]}</td>
+        <td>${d.distance.toFixed(4)}</td>
+        <td>${d.flows}</td>
+        <td>${(d.src_ips || []).join(", ")}</td>
+        <td>${(d.dst_ips || []).join(", ")}</td>
+      `;
+
+      dbLogBody.prepend(row);
+      if (dbLogBody.children.length > 200) {
+        dbLogBody.lastElementChild.remove();
+      }
+    };
+  </script>
+
+</body>
+
+</html>
