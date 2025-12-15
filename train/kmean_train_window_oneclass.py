@@ -14,7 +14,7 @@ ARTIFACT_DIR = "artifacts_window"
 os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
 WINDOW_SEC = 1
-THRESHOLD_PERCENTILE = 99.5  
+THRESHOLD_PERCENTILE = 99.5  # percentile để làm ngưỡng phát hiện anomaly, chỉ các điểm vượt qua ngưỡng này mới bị coi là anomaly 
 
 
 # tính entropy
@@ -106,9 +106,11 @@ def main():
     df = pd.read_csv(BENIGN_CSV_PATH, low_memory=False)
     print(f"Số dòng raw flows: {len(df)}")
 
+    # Trích xuất window features
     win_df = build_windows(df, window_sec=WINDOW_SEC)
     print(f"Số window sinh ra: {len(win_df)}")
 
+    # Chuẩn bị dữ liệu cho KMeans One-Class
     feature_cols = [
         "flows",
         "uniq_dst_ports",
@@ -128,8 +130,12 @@ def main():
     kmeans = KMeans(n_clusters=1, random_state=42, n_init=10)
     kmeans.fit(X_scaled)
 
+    # Tính threshold khoảng cách
+    ## Lấy tâm cụm
     centroid = kmeans.cluster_centers_[0]
+    ## Tính khoảng cách từ mỗi điểm đến tâm cụm
     dists = np.linalg.norm(X_scaled - centroid, axis=1)
+    ## Lấy ngưỡng khoảng cách tại percentile đã định
     threshold = np.percentile(dists, THRESHOLD_PERCENTILE)
 
     print(f"Train xong. Threshold ({THRESHOLD_PERCENTILE}%) = {threshold:.4f}")
